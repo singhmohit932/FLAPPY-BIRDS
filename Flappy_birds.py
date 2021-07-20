@@ -131,7 +131,7 @@ class Pipe:
     
 
     def move(self):
-        self.x -= self.velocity
+        self.x -= self.VEL
     
     def draw(self, win):
         win.blit(self.PIPE_TOP,(self.x,self.top))
@@ -169,8 +169,8 @@ class BASE:
         self.x2 = self.WIDTH
 
     def move(self):
-        self.x1 -= self.velocity
-        self.x2 -= self.velocity
+        self.x1 -= self.VEL
+        self.x2 -= self.VEL
 
         if self.x1 + self.WIDTH < 0:
             self.x1 = self.x2 + self.WIDTH
@@ -215,7 +215,7 @@ def main(genomes, config):
         ge.append(g)
 
       
-    base = base(730)
+    base = BASE(730)
     win = WIN
     clock = pygame.time.clock()
     pipes = [Pipe(600)]
@@ -298,7 +298,7 @@ def main(genomes, config):
 
 
         base.move()
-        draw_window(win,birds,pipes,base)   
+        draw_window(win,birds,pipes,base,score)   
 
 
 
@@ -314,7 +314,7 @@ def run(config_path):
      stats = neat.statisticsReporter()
      p.add_reporter(stats)
 
-     winner = p.run(main,50)
+     p.run(main,50)
 
 
 if __name__ == "main":

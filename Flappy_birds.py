@@ -33,6 +33,13 @@ BASE_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","base.
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 
 class Bird:
+    
+    
+    """
+    Bird class representing the flappy bird
+    """
+    
+    
     IMGS = BIRD_IMGS
     MAX_ROTATION = 25
     ROT_VEL = 20
@@ -50,15 +57,29 @@ class Bird:
         self.img = self.IMGS[0]
 
     def jump(self):
+        
+        """
+        make the bird jump
+        :return: None
+        """
+        
         self.velocity = -10.5
         self.tick_count = 0
         self.height = self.y
 
     def move(self):
+        
+        """
+        make the bird move
+        :return: None
+        """
+        
         self.tick_count+=1
-
+        
+        # for downward acceleration
         displace_ment = self.velocity*self.tick_count + 1.5*self.tick_count**2
-
+         
+        # terminal velocity
         if displace_ment>=16:
             displace_ment=16
 
@@ -76,6 +97,13 @@ class Bird:
 
 
     def draw(self, win):
+        
+        """
+        draw the bird
+        :param win: pygame window or surface
+        :return: None
+        """
+        
         self.img_count += 1
 
 
@@ -91,53 +119,103 @@ class Bird:
             self.img = self.IMGS[0]
             self.img_count = 0 
 
-
+        # so when bird is nose diving it isn't flapping
         if self.tilt <= -80:
             self.img = self.IMGS[1]
             self.img_count = self.ANIMATION_TIME*2
-
+         
+        # tilt the bird
         rotated_image =  pygame.transform.rotate(self.img, self.tilt)
         new_rect =  rotated_image.get_react(center=self.img.get_react(top_left = (self.x,self.y)).center)
         win.blit(rotated_image, new_rect.top_left)
 
-
+    
     def get_mask(self):
+        """
+        gets the mask for the current image of the bird
+        :return: None
+        """
         return pygame.mask.from_surface(self.img)
 
 
 
 class Pipe:
+    
+    """
+    represents a pipe object
+    """
+    
     GAP = 200
     VEL = 5
 
 
     def __init__(self,x):
+        
+        """
+        initialize pipe object
+        :param x: int
+        :param y: int
+        :return" None
+        """
+        
+        
+        
         self.x = x
         self.height = 0
-       
+         
+        # where the top and bottom of the pipe is
         self.top = 0
         self.bottom = 0
+        
+        #storing the images of the pipe
         self.PIPE_TOP = pygame.transform.flip(PIPE_IMG, False, True)
         self.PIPE_BOTTOM = PIPE_IMG
 
-
+        # it is used for if the pipe has been passed . It is for the A.I. purposes and 
+        # collision purpose
         self.passed = False
+        
+        # this for setting the height of the lower and upper pipe
         self.set_height()
 
     def set_height(self):
+        
+         """
+        set the height of the pipe, from the top of the screen
+        :return: None
+        """
+            
         self.height = random.randrange(50,450)
+        
+        #stores the top position of both the pipes
         self.top = self.height - self.PIPE_TOP.get_height()
         self.bottom = self.height + self.GAP
     
 
     def move(self):
+        """
+        move pipe based on vel
+        :return: None
+        """
         self.x -= self.VEL
     
     def draw(self, win):
+        """
+        draw both the top and bottom of the pipe
+        :param win: pygame window/surface
+        :return: None
+        """
+        # draw top
         win.blit(self.PIPE_TOP,(self.x,self.top))
+        # draw bottom
         win.blit(self.PIPE_BOTTOM, (self.x,self.bottom))
 
     def collide(self, bird):
+        """
+        returns if a point is colliding with the pipe
+        :param bird: Bird object
+        :return: Bool
+        """
         bird_mask = bird.get_mask()
         top_mask = pygame.mask.from_surface(self.PIPE_TOP)
         bottom_mask = pygame.mask.from_surface(self.PIPE_BOTTOM)
@@ -157,18 +235,30 @@ class Pipe:
 
 
 class BASE:
+    """
+    Represnts the moving floor of the game
+    """
     VEL = 5
     IMG = BASE_IMG
     WIDTH = BASE_IMG.get_width()
 
 
-
+    
     def __init__(self, y):
+        """
+        Initialize the object
+        :param y: int
+        :return: None
+        """
         self.y = y
         self.x1 = 0
         self.x2 = self.WIDTH
 
     def move(self):
+        """
+        move floor so it looks like its scrolling
+        :return: None
+        """
         self.x1 -= self.VEL
         self.x2 -= self.VEL
 
@@ -180,6 +270,11 @@ class BASE:
 
 
     def draw(self,win):
+        """
+        Draw the floor. This is two images that move together.
+        :param win: the pygame surface/window
+        :return: None
+        """
         win.blit(self.IMG,(self.x1,self.y))
         win.blit(self.IMG,(self.x2,self.y))
 
@@ -187,6 +282,17 @@ class BASE:
 
 
 def  draw_window(win, birds, pipes, base, score):
+    """
+    draws the windows for the main game loop
+    :param win: pygame window surface
+    :param bird: a Bird object
+    :param pipes: List of pipes
+    :param score: score of the game (int)
+    :param gen: current generation
+    :param pipe_ind: index of closest pipe
+    :return: None
+    """
+    
     win.blit(BG_IMG, (0,0))
 
     for pipe in pipes:
@@ -200,14 +306,21 @@ def  draw_window(win, birds, pipes, base, score):
        bird.draw(win)
     pygame.display.update()
 
-def main(genomes, config):
+def eval_genomes(genomes, config):
+    
+    """
+    runs the simulation of the current population of
+    birds and sets their fitness based on the distance they
+    reach in the game.
+    """
+    
     global WIN 
     nets = []
     ge = []
     birds =  []
     
 
-    for _,g in genomes :
+    for g in genomes :
         net = neat.nn.FeedForwardNetwork.create(g, config)
         nets.append(net)
         birds.append(Bird(230,350))
@@ -303,21 +416,37 @@ def main(genomes, config):
 
 
 def run(config_path):
+    
+    """
+    runs the NEAT algorithm to train a neural network to play flappy bird.
+    :param config_file: location of config file
+    :return: None
+    """
 
      config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_file)
-
+     
+     # Create the population, which is the top-level object for a NEAT run.
      p = neat.Population(config)
-
+       
+     # Add a stdout reporter to show progress in the terminal.
      p.add_reporter(neat.StdOutReporter(True))
      stats = neat.statisticsReporter()
      p.add_reporter(stats)
+     #p.add_reporter(neat.Checkpointer(5))
+     
+     # Run for up to 50 generations.
+     winner = p.run(eval_genomes, 50)
 
-     p.run(main,50)
+     # show final stats
+     print('\nBest genome:\n{!s}'.format(winner))
 
 
 if __name__ == "main":
+    # Determine path to configuration file. This path manipulation is
+    # here so that the script will run successfully regardless of the
+    # current working directory.
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir,"config_feedforward.txt")
     run(config_path)
